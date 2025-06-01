@@ -10,12 +10,20 @@ function FindProxyForURL(url, host) {
     return "DIRECT";
   }
 
-  // 3. 国内主流域名直连（你可继续补充）
+  // 2. IP地址直连（避免dns误判，IP段根据需要调整）
+  if (isInNet(host, "10.0.0.0", "255.0.0.0") ||
+      isInNet(host, "192.168.0.0", "255.255.0.0") ||
+      isInNet(host, "127.0.0.0", "255.0.0.0") ||
+      isInNet(host, "172.16.0.0", "255.240.0.0")) {
+    return "DIRECT";
+  }
+
+  // 3. 国内主流域名直连，结尾加$更精确匹配，防止误判
   var direct_domains = [
-    "baidu.com", "qq.com", "bilibili.com", "sina.com.cn",
-    "jd.com", "taobao.com", "tmall.com", "aliyun.com", "weibo.com",
-    "douyin.com", ".cn", "youku.com", "iqiyi.com", "ifeng.com",
-    "zhihu.com", "kuaishou.com", "mi.com"
+    "baidu.com$", "qq.com$", "bilibili.com$", "sina.com.cn$",
+    "jd.com$", "taobao.com$", "tmall.com$", "aliyun.com$", "weibo.com$",
+    "douyin.com$", ".cn$", "youku.com$", "iqiyi.com$", "ifeng.com$",
+    "zhihu.com$", "kuaishou.com$", "mi.com$"
   ];
   for (var i = 0; i < direct_domains.length; i++) {
     if (shExpMatch(host, "*" + direct_domains[i])) {
@@ -23,7 +31,7 @@ function FindProxyForURL(url, host) {
     }
   }
 
-  // 4. 强制代理访问的国外网站（保证访问畅通）
+  // 4. 强制走代理的国外主流网站，尽量保证畅通
   var proxy_domains = [
     "google.com", "youtube.com", "facebook.com",
     "twitter.com", "instagram.com", "wikipedia.org",
@@ -35,6 +43,6 @@ function FindProxyForURL(url, host) {
     }
   }
 
-  // 5. 其他网站默认走代理
+  // 5. 其他网址全部走代理
   return "SOCKS5 192.168.10.5:7890; PROXY 192.168.10.5:7890";
 }
