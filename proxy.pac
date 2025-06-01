@@ -1,28 +1,93 @@
 function FindProxyForURL(url, host) {
+  // 1. 局域网、本地地址直连
   if (
     shExpMatch(host, "*.local") ||
     shExpMatch(host, "localhost") ||
     isInNet(dnsResolve(host), "10.0.0.0", "255.0.0.0") ||
     isInNet(dnsResolve(host), "192.168.0.0", "255.255.0.0") ||
     isInNet(dnsResolve(host), "127.0.0.0", "255.0.0.0")
-  ) return "DIRECT";
-
-  var direct_domains = [
-    "baidu.com", "qq.com", "bilibili.com", "sina.com.cn", "jd.com", "taobao.com",
-    "tmall.com", "aliyun.com", "weibo.com", "douyin.com", "kuaishou.com",
-    "zhihu.com", "xigua.com", "163.com", ".cn", "gov.cn", "edu.cn"
-  ];
-  for (var i = 0; i < direct_domains.length; i++) {
-    if (shExpMatch(host, "*" + direct_domains[i])) return "DIRECT";
+  ) {
+    return "DIRECT";
   }
 
-  // 国内 IP 段判断（可扩展）
-  if (
-    isInNet(dnsResolve(host), "36.0.0.0", "255.0.0.0") ||
-    isInNet(dnsResolve(host), "39.0.0.0", "255.0.0.0") ||
-    isInNet(dnsResolve(host), "42.0.0.0", "255.0.0.0")
-  ) return "DIRECT";
+  // 2. 国内主要IP段直连（避免DNS污染）
+  // 可根据需要添加更多IP段
+  var chinaIPBlocks = [
+    ["1.0.1.0", "255.255.255.0"],
+    ["14.0.0.0", "255.0.0.0"],
+    ["27.0.0.0", "255.0.0.0"],
+    ["36.0.0.0", "255.0.0.0"],
+    ["39.0.0.0", "255.0.0.0"],
+    ["42.0.0.0", "255.0.0.0"],
+    ["58.0.0.0", "255.0.0.0"],
+    ["59.0.0.0", "255.0.0.0"],
+    ["60.0.0.0", "255.0.0.0"],
+    ["61.0.0.0", "255.0.0.0"],
+    ["101.0.0.0", "255.0.0.0"],
+    ["103.0.0.0", "255.255.254.0"],
+    ["106.0.0.0", "255.0.0.0"],
+    ["110.0.0.0", "255.0.0.0"],
+    ["111.0.0.0", "255.0.0.0"],
+    ["112.0.0.0", "255.0.0.0"],
+    ["113.0.0.0", "255.0.0.0"],
+    ["114.0.0.0", "255.0.0.0"],
+    ["115.0.0.0", "255.0.0.0"],
+    ["116.0.0.0", "255.0.0.0"],
+    ["117.0.0.0", "255.0.0.0"],
+    ["118.0.0.0", "255.0.0.0"],
+    ["119.0.0.0", "255.0.0.0"],
+    ["120.0.0.0", "255.0.0.0"],
+    ["121.0.0.0", "255.0.0.0"],
+    ["122.0.0.0", "255.0.0.0"],
+    ["123.0.0.0", "255.0.0.0"],
+    ["124.0.0.0", "255.0.0.0"],
+    ["125.0.0.0", "255.0.0.0"],
+    ["126.0.0.0", "255.0.0.0"],
+    ["175.0.0.0", "255.0.0.0"],
+    ["180.0.0.0", "255.0.0.0"],
+    ["182.0.0.0", "255.0.0.0"],
+    ["183.0.0.0", "255.0.0.0"],
+    ["202.0.0.0", "255.0.0.0"],
+    ["203.0.0.0", "255.255.254.0"],
+    ["210.0.0.0", "255.0.0.0"],
+    ["211.0.0.0", "255.0.0.0"],
+    ["218.0.0.0", "255.0.0.0"],
+    ["219.0.0.0", "255.0.0.0"],
+    ["220.0.0.0", "255.0.0.0"],
+    ["221.0.0.0", "255.0.0.0"],
+    ["222.0.0.0", "255.0.0.0"]
+  ];
+  for (var i = 0; i < chinaIPBlocks.length; i++) {
+    if (isInNet(dnsResolve(host), chinaIPBlocks[i][0], chinaIPBlocks[i][1])) {
+      return "DIRECT";
+    }
+  }
 
-  // 默认通过手机代理（先 SOCKS5，再 HTTP 兜底）
-  return "SOCKS5 192.168.10.5:7890";
+  // 3. 国内主流域名直连（你可继续补充）
+  var direct_domains = [
+    "baidu.com", "qq.com", "bilibili.com", "sina.com.cn",
+    "jd.com", "taobao.com", "tmall.com", "aliyun.com", "weibo.com",
+    "douyin.com", ".cn", "youku.com", "iqiyi.com", "ifeng.com",
+    "zhihu.com", "kuaishou.com", "mi.com"
+  ];
+  for (var i = 0; i < direct_domains.length; i++) {
+    if (shExpMatch(host, "*" + direct_domains[i])) {
+      return "DIRECT";
+    }
+  }
+
+  // 4. 强制代理访问的国外网站（保证访问畅通）
+  var proxy_domains = [
+    "google.com", "youtube.com", "facebook.com",
+    "twitter.com", "instagram.com", "wikipedia.org",
+    "github.com", "reddit.com"
+  ];
+  for (var i = 0; i < proxy_domains.length; i++) {
+    if (shExpMatch(host, "*" + proxy_domains[i])) {
+      return "SOCKS5 192.168.10.5:7890; PROXY 192.168.10.5:7890";
+    }
+  }
+
+  // 5. 其他网站默认走代理
+  return "SOCKS5 192.168.10.5:7890; PROXY 192.168.10.5:7890";
 }
