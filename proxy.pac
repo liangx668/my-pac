@@ -5,66 +5,56 @@ function FindProxyForURL(url, host) {
     shExpMatch(host, "localhost") ||
     isInNet(dnsResolve(host), "10.0.0.0", "255.0.0.0") ||
     isInNet(dnsResolve(host), "192.168.0.0", "255.255.0.0") ||
-    isInNet(dnsResolve(host), "127.0.0.0", "255.0.0.0") ||
-    isInNet(dnsResolve(host), "172.16.0.0", "255.240.0.0")
+    isInNet(dnsResolve(host), "127.0.0.0", "255.0.0.0")
   ) {
     return "DIRECT";
   }
 
-  // 2. 常用国外服务走代理
-  var proxy_domains = [
-    // ChatGPT & OpenAI
-    "openai.com", "chat.openai.com", "auth0.com",
-    
-    // Google 系
-    "google.com", "gstatic.com", "googleapis.com", "googleusercontent.com", "googlesyndication.com", "googlevideo.com", "ytimg.com", "youtube.com", "youtube-nocookie.com", "withgoogle.com",
+  // 2. IP地址直连（避免dns误判，IP段根据需要调整）
+  if (isInNet(host, "10.0.0.0", "255.0.0.0") ||
+      isInNet(host, "192.168.0.0", "255.255.0.0") ||
+      isInNet(host, "127.0.0.0", "255.0.0.0") ||
+      isInNet(host, "172.16.0.0", "255.240.0.0")) {
+    return "DIRECT";
+  }
 
-    // Facebook 系
-    "facebook.com", "fbcdn.net", "facebook.net", "messenger.com",
-
-    // X / Twitter
-    "twitter.com", "t.co", "x.com",
-
-    // Telegram
-    "telegram.org", "t.me",
-
-    // Instagram
-    "instagram.com", "cdninstagram.com",
-
-    // Discord
-    "discord.com", "discord.gg", "discordapp.com", "discordmedia.com",
-
-    // Reddit
-    "reddit.com", "redd.it", "redditmedia.com",
-
-    // Github
-    "github.com", "githubusercontent.com", "githubassets.com", "ghcr.io",
-
-    // Microsoft & Outlook
-    "microsoft.com", "live.com", "outlook.com", "office.com", "msn.com",
-
-    // Netflix
-    "netflix.com", "nflximg.net", "nflxvideo.net", "nflxso.net",
-
-    // Twitch
-    "twitch.tv", "ttvnw.net",
-
-    // Zoom & Teams
-    "zoom.us", "zoom.com", "teams.microsoft.com",
-
-    // CDN / 基础资源
-    "cloudflare.com", "cloudfront.net", "akamai.net", "fastly.net",
-
-    // 其它常见
-    "medium.com", "notion.so", "slack.com", "duckduckgo.com", "line.me", "pinterest.com", "vimeo.com"
+  // 3. 国内主流域名直连，结尾加$更精确匹配，防止误判
+  var direct_domains = [
+    "baidu.com$", "qq.com$", "bilibili.com$", "sina.com.cn$",
+    "jd.com$", "taobao.com$", "tmall.com$", "aliyun.com$", "weibo.com$",
+    "douyin.com$", ".cn$", "youku.com$", "iqiyi.com$", "ifeng.com$",
+    "zhihu.com$", "kuaishou.com$", "mi.com$"
   ];
+  for (var i = 0; i < direct_domains.length; i++) {
+    if (shExpMatch(host, "*" + direct_domains[i])) {
+      return "DIRECT";
+    }
+  }
 
+  // 4. Apple相关服务直连，保证系统功能正常
+  var apple_domains = [
+    "apple.com$", "icloud.com$", "mzstatic.com$", "akadns.net$", "cdn-apple.com$",
+    "itunes.apple.com$", "apps.apple.com$", "push.apple.com$", "api.smoot.apple.com$",
+    "mzstatic.com$", "edgekey.net$", "akadns.net$"
+  ];
+  for (var i = 0; i < apple_domains.length; i++) {
+    if (shExpMatch(host, "*" + apple_domains[i])) {
+      return "DIRECT";
+    }
+  }
+
+  // 5. 强制走代理的国外主流网站，保证访问畅通
+  var proxy_domains = [
+    "google.com", "youtube.com", "facebook.com",
+    "twitter.com", "instagram.com", "wikipedia.org",
+    "github.com", "reddit.com"
+  ];
   for (var i = 0; i < proxy_domains.length; i++) {
     if (shExpMatch(host, "*" + proxy_domains[i])) {
       return "SOCKS5 192.168.10.5:7890; PROXY 192.168.10.5:7890";
     }
   }
 
-  // 3. 其它默认直连
-  return "DIRECT";
+  // 6. 其他所有网站走代理
+  return "SOCKS5 192.168.10.5:7890; PROXY 192.168.10.5:7890";
 }
