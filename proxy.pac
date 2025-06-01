@@ -19,5 +19,5 @@ function FindProxyForURL(url, host) {
   }
 
   // 其余全部走手机代理（HTTP 或 SOCKS5 任选其一）
-  return "SOCKS5 192.168.10.5:7890";  
+  return "SOCKS5 192.168.10.5:7890; PROXY 192.168.10.5:7890";
 }
