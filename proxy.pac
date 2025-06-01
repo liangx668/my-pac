@@ -31,7 +31,19 @@ function FindProxyForURL(url, host) {
     }
   }
 
-  // 4. 强制走代理的国外主流网站，尽量保证畅通
+  // 4. Apple相关服务直连，保证系统功能正常
+  var apple_domains = [
+    "apple.com$", "icloud.com$", "mzstatic.com$", "akadns.net$", "cdn-apple.com$",
+    "itunes.apple.com$", "apps.apple.com$", "push.apple.com$", "api.smoot.apple.com$",
+    "mzstatic.com$", "edgekey.net$", "akadns.net$"
+  ];
+  for (var i = 0; i < apple_domains.length; i++) {
+    if (shExpMatch(host, "*" + apple_domains[i])) {
+      return "DIRECT";
+    }
+  }
+
+  // 5. 强制走代理的国外主流网站，保证访问畅通
   var proxy_domains = [
     "google.com", "youtube.com", "facebook.com",
     "twitter.com", "instagram.com", "wikipedia.org",
@@ -43,6 +55,6 @@ function FindProxyForURL(url, host) {
     }
   }
 
-  // 5. 其他网址全部走代理
+  // 6. 其他所有网站走代理
   return "SOCKS5 192.168.10.5:7890; PROXY 192.168.10.5:7890";
 }
