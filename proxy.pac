@@ -2,7 +2,7 @@ function FindProxyForURL(url, host) {
   var proxy = "SOCKS5 192.168.2.200:7890; SOCKS 192.168.2.200:7890; DIRECT";
   var direct = "DIRECT";
 
-  // 局域网地址直连
+  // 本地地址或局域网直连
   if (
     isPlainHostName(host) ||
     dnsDomainIs(host, ".local") ||
@@ -29,6 +29,30 @@ function FindProxyForURL(url, host) {
     return direct;
   }
 
+  // Apple / iCloud / iOS 相关域名直连
+  var appleDomains = [
+    "apple.com",
+    "icloud.com",
+    "me.com",
+    "mac.com",
+    "apple-dns.net",
+    "appleid.apple.com",
+    "itunes.apple.com",
+    "api.apple-cloudkit.com",
+    "gs.apple.com",
+    "push.apple.com",
+    "configuration.apple.com",
+    "updates-http.cdn-apple.com",
+    "updates.cdn-apple.com",
+    "mzstatic.com",
+    "icloud-content.com"
+  ];
+  for (var i = 0; i < appleDomains.length; i++) {
+    if (dnsDomainIs(host, appleDomains[i]) || shExpMatch(host, "*." + appleDomains[i])) {
+      return direct;
+    }
+  }
+
   // 常见国内网站直连
   var chinaDomains = [
     "baidu.com",
@@ -53,7 +77,7 @@ function FindProxyForURL(url, host) {
     }
   }
 
-  // 国内 IP 地址直连
+  // 常见中国 IP 段直连（适配国内 CDN 和解析）
   var resolved_ip = dnsResolve(host);
   if (resolved_ip) {
     if (
@@ -62,8 +86,7 @@ function FindProxyForURL(url, host) {
       isInNet(resolved_ip, "192.168.0.0", "255.255.0.0") ||
       isInNet(resolved_ip, "100.64.0.0", "255.192.0.0") ||
       isInNet(resolved_ip, "127.0.0.0", "255.0.0.0") ||
-      isInNet(resolved_ip, "0.0.0.0", "255.0.0.0") ||
-      isInNet(resolved_ip, "36.0.0.0", "255.0.0.0") || // 中国部分IP段
+      isInNet(resolved_ip, "36.0.0.0", "255.0.0.0") ||
       isInNet(resolved_ip, "58.0.0.0", "255.0.0.0") ||
       isInNet(resolved_ip, "59.0.0.0", "255.0.0.0") ||
       isInNet(resolved_ip, "60.0.0.0", "255.0.0.0") ||
@@ -90,6 +113,6 @@ function FindProxyForURL(url, host) {
     }
   }
 
-  // 默认走代理
+  // 其他一律走代理
   return proxy;
 }
