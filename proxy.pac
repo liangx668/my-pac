@@ -69,7 +69,8 @@ function FindProxyForURL(url, host) {
     "sina.com.cn",
     "sohu.com",
     "douyin.com",
-    "kuaishou.com"
+    "kuaishou.com",
+    "test.ustc.edu.cn"
   ];
   for (var i = 0; i < chinaDomains.length; i++) {
     if (dnsDomainIs(host, chinaDomains[i]) || shExpMatch(host, "*." + chinaDomains[i])) {
