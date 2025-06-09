@@ -70,6 +70,19 @@ function FindProxyForURL(url, host) {
     "sohu.com",
     "douyin.com",
     "kuaishou.com",
+    "zhihu.com",
+    "cctv.com",
+    "doubanio.com",
+    "weibo.com",
+    "yuewen.com",
+    "duolingo.cn",
+    "izuiyou.com",
+    "tencent.com",
+    "liangx.sbs",
+    "microsoft.com",
+    "live.com",
+    "qidian.com",
+    "epicgames.com",
     "test.ustc.edu.cn"
   ];
   for (var i = 0; i < chinaDomains.length; i++) {
