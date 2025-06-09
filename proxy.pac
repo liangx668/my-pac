@@ -1,108 +1,95 @@
 function FindProxyForURL(url, host) {
-  // 一、局域网、本地地址直连
+  var proxy = "SOCKS5 192.168.2.200:7890; SOCKS 192.168.2.200:7890; DIRECT";
+  var direct = "DIRECT";
+
+  // 局域网地址直连
   if (
-    shExpMatch(host, "*.local") ||
-    shExpMatch(host, "localhost") ||
-    isInNet(dnsResolve(host), "10.0.0.0", "255.0.0.0") ||
-    isInNet(dnsResolve(host), "192.168.0.0", "255.255.0.0") ||
-    isInNet(dnsResolve(host), "127.0.0.0", "255.0.0.0") ||
-    isInNet(dnsResolve(host), "172.16.0.0", "255.240.0.0")
+    isPlainHostName(host) ||
+    dnsDomainIs(host, ".local") ||
+    shExpMatch(host, "10.*") ||
+    shExpMatch(host, "192.168.*") ||
+    shExpMatch(host, "127.*") ||
+    shExpMatch(host, "172.16.*") ||
+    shExpMatch(host, "172.17.*") ||
+    shExpMatch(host, "172.18.*") ||
+    shExpMatch(host, "172.19.*") ||
+    shExpMatch(host, "172.20.*") ||
+    shExpMatch(host, "172.21.*") ||
+    shExpMatch(host, "172.22.*") ||
+    shExpMatch(host, "172.23.*") ||
+    shExpMatch(host, "172.24.*") ||
+    shExpMatch(host, "172.25.*") ||
+    shExpMatch(host, "172.26.*") ||
+    shExpMatch(host, "172.27.*") ||
+    shExpMatch(host, "172.28.*") ||
+    shExpMatch(host, "172.29.*") ||
+    shExpMatch(host, "172.30.*") ||
+    shExpMatch(host, "172.31.*")
   ) {
-    return "DIRECT";
+    return direct;
   }
 
-// 二、国内主要平台直连（包含补充）
-var direct_domains = [
-  // 腾讯系
-  "qq.com$", "weixin.qq.com$", "qzone.com$", "qqun.com$", "qplus.com$", "myapp.com$", "tencent.com$",
-
-  // 阿里系
-  "alibaba.com$", "1688.com$", "taobao.com$", "tmall.com$", "alipay.com$", "alipayobjects.com$", "zfbjk.com$", "etao.com$", "mmstat.com$", "cainiao.com$", 
-  "xiami.com$", "feizhu.com$", "dingtalk.com$", "aliyun.com$",
-
-  // 字节系
-  "bytedance.com$", "douyin.com$", "toutiao.com$", "ixigua.com$", "feishu.cn$", "capcut.cn$", "lemon8.com$",
-
-  // 百度系
-  "baidu.com$", "tieba.baidu.com$", "hao123.com$", "iqiyi.com$", "baofeng.com$", "baijiahao.baidu.com$",
-
-  // 央视系
-  "cctv.com$", "news.cn$", "cntv.cn$",
-
-  // 豆瓣、酷安、起点、番茄、咪咕、DeepSeek、优酷
-  "douban.com$", "coolapk.com$", "qidian.com$", "hongdian.com$", "migu.cn$", "deepseek.com$", "youku.com$",
-
-  // 社交
-  "wechat.com$", "weixin.com$", "weibo.com$", "weibo.cn$", "m.weibo.cn$",
-
-  // 视频音频
-  "bilibili.com$", "mgtv.com$", "ximalaya.com$", "lizhi.fm$", "kuaishou.com$",
-
-  // 电商
-  "jd.com$", "pinduoduo.com$", "vip.com$", "dangdang.com$", "suning.com$",
-
-  // 新闻资讯
-  "people.com.cn$", "xinhuanet.com$", "ifeng.com$", "163.com$", "sina.com.cn$",
-
-  // 工具/邮箱/导航
-  "2345.com$", "so.com$", "115.com$", "mail.qq.com$", "mail.163.com$", "189.cn$", "10086.cn$",
-
-  // 教育/阅读
-  "zxxk.com$", "zuoyebang.com$", "xueersi.com$", "book.qq.com$",
-
-  // 手机厂商
-  "mi.com$", "xiaomi.com$", "vivo.com$", "oppo.com$", "huawei.com$", "honor.cn$", "meizu.com$", "smartisan.com$",
-
-  // 云服务
-  "tencentcloud.com$", "hicloud.com$", "bdstatic.com$", "baidubce.com$", "qcloud.com$", "qiniu.com$",
-
-  // 支付宝支付相关
-  "wx.tenpay.com$", "pay.weixin.qq.com$", "qpay.qq.com$", "tenpay.com$",
-  "95516.com$", "unionpay.com$", "yunshanfu.com$", "chinaunionpay.com$",
-  "jdpay.com$", "pay.jd.com$",
-  "wallet.xiaomi.com$", "qrcode.alipay.com$", "qrcode.tenpay.com$", "qr.alipay.com$",
-  "qianbao.qq.com$", "pay.cmbchina.com$", "ebank.icbc.com.cn$", "ebank.abchina.com$",
-
-  // Apple 相关（支付及系统服务）
-  "apple.com$", "mzstatic.com$", "akadns.net$", "cdn-apple.com$", "itunes.apple.com$", "apps.apple.com$", "push.apple.com$", "api.smoot.apple.com$",
-
-  // 其他常用平台补充
-  "zhihu.com$", "xiaohongshu.com$", "meituan.com$", "ctrip.com$",
-
-  // 泛 .cn 结尾（大部分中国网站）
-  ".cn$"
-];
-  for (var i = 0; i < direct_domains.length; i++) {
-    if (shExpMatch(host, "*" + direct_domains[i])) {
-      return "DIRECT";
-    }
-  }
-
-  // 三、Apple服务直连（避免系统功能受限）
-  var apple_domains = [
-    "apple.com$", "icloud.com$", "mzstatic.com$", "akadns.net$", "cdn-apple.com$",
-    "itunes.apple.com$", "apps.apple.com$", "push.apple.com$", "api.smoot.apple.com$",
-    "edgekey.net$"
+  // 常见国内网站直连
+  var chinaDomains = [
+    "baidu.com",
+    "qq.com",
+    "jd.com",
+    "bilibili.com",
+    "youku.com",
+    "iqiyi.com",
+    "taobao.com",
+    "tmall.com",
+    "alipay.com",
+    "wechat.com",
+    "weixin.com",
+    "sina.com.cn",
+    "sohu.com",
+    "douyin.com",
+    "kuaishou.com"
   ];
-  for (var i = 0; i < apple_domains.length; i++) {
-    if (shExpMatch(host, "*" + apple_domains[i])) {
-      return "DIRECT";
+  for (var i = 0; i < chinaDomains.length; i++) {
+    if (dnsDomainIs(host, chinaDomains[i]) || shExpMatch(host, "*." + chinaDomains[i])) {
+      return direct;
     }
   }
 
-  // 四、国外网站强制代理
-  var proxy_domains = [
-    "google.com", "youtube.com", "gstatic.com", "googleapis.com",
-    "facebook.com", "twitter.com", "instagram.com", "wikipedia.org",
-    "github.com", "github.io", "reddit.com", "t.co", "medium.com",
-    "telegram.org", "t.me", "openai.com", "pinterest.com", "netflix.com"
-  ];
-  for (var i = 0; i < proxy_domains.length; i++) {
-    if (shExpMatch(host, "*" + proxy_domains[i])) {
-      return "SOCKS5 192.168.10.5:7890; PROXY 192.168.10.5:7890";
+  // 国内 IP 地址直连
+  var resolved_ip = dnsResolve(host);
+  if (resolved_ip) {
+    if (
+      isInNet(resolved_ip, "10.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "172.16.0.0", "255.240.0.0") ||
+      isInNet(resolved_ip, "192.168.0.0", "255.255.0.0") ||
+      isInNet(resolved_ip, "100.64.0.0", "255.192.0.0") ||
+      isInNet(resolved_ip, "127.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "0.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "36.0.0.0", "255.0.0.0") || // 中国部分IP段
+      isInNet(resolved_ip, "58.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "59.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "60.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "61.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "101.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "103.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "106.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "110.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "112.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "113.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "114.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "115.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "116.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "117.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "118.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "119.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "120.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "121.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "122.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "123.0.0.0", "255.0.0.0") ||
+      isInNet(resolved_ip, "124.0.0.0", "255.0.0.0")
+    ) {
+      return direct;
     }
   }
 
-  // 五、其他全部走代理（默认兜底）
-  return "SOCKS5 192.168.2.200:7890; PROXY 192.168.2.200:7890";
+  // 默认走代理
+  return proxy;
 }
