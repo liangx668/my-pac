@@ -1,5 +1,5 @@
 function FindProxyForURL(url, host) {
-  var proxy = "SOCKS5 192.168.2.200:7890; SOCKS 192.168.2.200:7890; DIRECT";
+  var proxy = "SOCKS5 192.168.2.200:7890; SOCKS 192.168.2.200:7890";
   var direct = "DIRECT";
 
   // 本地地址或局域网直连
@@ -126,6 +126,19 @@ function FindProxyForURL(url, host) {
       return direct;
     }
   }
+
+var facebookDomains = [
+  "facebook.com",
+  "facebook.net",
+  "fbcdn.net",
+  "messenger.com"
+];
+for (var i = 0; i < facebookDomains.length; i++) {
+  if (dnsDomainIs(host, facebookDomains[i]) || shExpMatch(host, "*." + facebookDomains[i])) {
+    return proxy;
+  }
+}
+
 
   // 其他一律走代理
   return proxy;
